@@ -1,10 +1,11 @@
-use std::{path::Path};
+use std::path::Path;
 
-use notify::{Watcher, RecommendedWatcher, RecursiveMode, Result, Config, EventKind::Modify, EventKind::Create, EventKind::Access, EventKind::Any, EventKind::Other, EventKind::Remove, event::ModifyKind};
+use notify::{Watcher, RecommendedWatcher, RecursiveMode, Result, Config};
 
 use crate::csv_reader;
+use crate::txt_reader;
 
-pub fn notify_change<P: AsRef<Path>>(path: P) -> Result<()> {
+pub fn watch_folder<P: AsRef<Path>>(path: P) -> Result<()> {
     let (tx, rx) = std::sync::mpsc::channel();
 
     let mut watcher = RecommendedWatcher::new(tx, Config::default())?;
@@ -24,7 +25,7 @@ pub fn notify_change<P: AsRef<Path>>(path: P) -> Result<()> {
                     println!("Create event: {:?}", &path);
                 }
                 else if event.kind.is_access() {
-                    let _ = csv_reader::read_file_from_path(&path);
+                    publish_event(&path);
                 }
             },
             Err(e) => println!("watch error: {:?}", e),
@@ -32,4 +33,18 @@ pub fn notify_change<P: AsRef<Path>>(path: P) -> Result<()> {
     }
 
     Ok(())
+}
+
+fn publish_event(file: &str) {
+    if file.contains(".csv") {
+        let contents = csv_reader::read_file_from_path(file);
+        println!("{:?}", contents);
+    }
+    else if file.contains(".xlsx") {
+        todo!();
+    }
+    else if file.contains(".txt") {
+        let contents = txt_reader::read_file_from_path(file).expect("Error getting content from the file.");
+        println!("{}", contents);
+    }
 }
