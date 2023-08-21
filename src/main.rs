@@ -10,6 +10,17 @@ fn main() {
         .nth(1)
         .expect("Argument 1 needs to be a path");
 
+    let mut i = 0;
+
+    while i < 3 {
+        if let Err(error) = event_watcher::watch_folder_trigger(&path) {
+            println!("Error: {:?}", error);
+        }
+
+        i += 1;
+        println!("{}", i);
+    }
+
     println!("Watching {}", path);
 
     if let Err(error) = event_watcher::watch_folder(path) {
